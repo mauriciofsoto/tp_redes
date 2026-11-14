@@ -74,6 +74,11 @@ public static class AnalizadorHttp
         if (lineas.Length == 0 || string.IsNullOrWhiteSpace(lineas[0]))
             throw new SolicitudInvalidaException(400, "Solicitud vacía.");
 
+        // Rechazamos caracteres de control (incluye \n, \r y \t) en la línea inicial:
+        // si no, se cuelan saltos de línea en la URL y ensucian/forjan el log.
+        if (lineas[0].Any(char.IsControl))
+            throw new SolicitudInvalidaException(400, "Caracteres inválidos en la solicitud.");
+
         string[] partes = lineas[0].Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (partes.Length != 3 || !partes[2].StartsWith("HTTP/", StringComparison.OrdinalIgnoreCase))
             throw new SolicitudInvalidaException(400, "Línea de solicitud mal formada.");

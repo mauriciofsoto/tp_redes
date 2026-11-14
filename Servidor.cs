@@ -59,10 +59,17 @@ public class Servidor
                     _limite.Release();
                     break; // listener.Stop()
                 }
-                catch (SocketException)
+                catch (SocketException ex)
                 {
                     _limite.Release();
-                    break; // error de socket al cerrar
+
+                    if (token.IsCancellationRequested)
+                        break; // apagado real
+
+                    // Error pasajero al aceptar (ej. un cliente que resetea justo en ese momento):
+                    // NO apagamos el servidor, seguimos escuchando.
+                    Console.WriteLine($"[Servidor] Error al aceptar: {ex.Message}");
+                    continue;
                 }
 
                 // 3) Lanzamos la tarea: corre en un hilo del ThreadPool (no creamos hilos).
