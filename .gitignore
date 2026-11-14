@@ -1,0 +1,28 @@
+# --- .NET: salidas de compilación ---
+bin/
+obj/
+artifacts/
+
+# --- Visual Studio / VS Code / Rider ---
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# --- Logs generados en ejecución (Logger) ---
+logs/
+*.log
+
+# --- Herramientas locales ---
+.opencode/
+
+# --- Temporales y archivos del sistema ---
+*.tmp
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# NO ignorar: config.json y publico/ son parte del trabajo y deben subirse.
