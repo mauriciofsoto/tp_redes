@@ -136,15 +136,52 @@ public class ManejadorSolicitudes
         await EnviarAsync(stream, 200, "OK", contentType, cuerpo, token, comprimido: comprimir);
     }
 
+
     private static bool AceptaGzip(Solicitud solicitud)
     {
-        if (!solicitud.Headers.TryGetValue("Accept-Encoding", out string? valor) || valor is null)
+        if (!solicitud.Headers.TryGetValue("Accept-Encoding", out string? valor)
+            || valor is null)
             return false;
 
-        // "gzip, deflate, br" → buscamos el token gzip.
-        return valor.Split(',')
-            .Any(parte => parte.Trim().StartsWith("gzip", StringComparison.OrdinalIgnoreCase));
+        bool? gzipExplicito = null;
+        bool wildcardAceptado = false;
+
+        foreach (string elemento in valor.Split(','))
+        {
+            string[] partes = elemento.Split(';');
+            string codificacion = partes[0].Trim();
+
+            decimal calidad = 1m;
+
+            foreach (string parametro in partes.Skip(1))
+            {
+                string[] par = parametro.Trim().Split('=', 2);
+
+                if (par.Length == 2 &&
+                    par[0].Trim().Equals("q", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!decimal.TryParse(
+                        par[1].Trim(),
+                        System.Globalization.NumberStyles.AllowDecimalPoint,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out calidad)
+                        || calidad < 0 || calidad > 1)
+                    {
+                        calidad = 0;
+                    }
+                }
+            }
+
+            if (codificacion.Equals("gzip", StringComparison.OrdinalIgnoreCase))
+                gzipExplicito = calidad > 0;
+
+            if (codificacion == "*")
+                wildcardAceptado = calidad > 0;
+        }
+
+        return gzipExplicito ?? wildcardAceptado;
     }
+
 
     private static async Task EnviarAsync(
         NetworkStream stream,
